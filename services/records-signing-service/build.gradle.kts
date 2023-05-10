@@ -1,12 +1,15 @@
+import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.0.6"
 	id("io.spring.dependency-management") version "1.1.0"
+	//id("org.graalvm.buildtools.native") version "0.9.20"
 }
 
 group = "ua.sinaver.web3"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_19
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
 	mavenCentral()
@@ -28,4 +31,16 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+// update docker image for M1 architecture
+tasks.withType<BootBuildImage> {
+	val osName = System.getProperty("os.name").lowercase()
+	val arch = System.getProperty("os.arch")
+
+	val runningOnM1Mac = "mac" in osName && arch == "aarch64"
+	if (runningOnM1Mac) {
+		builder.set("dashaun/builder:tiny")
+		//environment.set(mapOf("BP_NATIVE_IMAGE" to "true"))
+	}
 }
