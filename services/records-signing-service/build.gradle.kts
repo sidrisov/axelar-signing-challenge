@@ -21,6 +21,10 @@ dependencies {
 	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation ("org.springframework.boot:spring-boot-starter-web")
 	
+	// utils
+	implementation("org.apache.commons:commons-lang3:3.12.0")
+	implementation("org.bouncycastle:bcprov-jdk18on:1.73")
+
 	developmentOnly ("org.springframework.boot:spring-boot-devtools")
 	
 	//runtimeOnly ("com.h2database:h2")

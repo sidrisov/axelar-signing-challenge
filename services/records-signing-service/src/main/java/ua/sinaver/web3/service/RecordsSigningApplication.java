@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,16 +21,17 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "ua.sinaver.web3.repository" )
 @RestController
-@EntityScan(basePackages = "ua.sinaver.web3.data")
-@ComponentScan(basePackages = "ua.sinaver.web3.service")
+@EntityScan(basePackages = "ua.sinaver.web3")
+@ComponentScan(basePackages = "ua.sinaver.web3")
 public class RecordsSigningApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(RecordsSigningApplication.class, args);
 	}
 
-	@PostMapping("/generate")
+	@PostMapping("/health")
 	public ResponseEntity<String> generate() {
 		return ResponseEntity.ok("All good!");
 	}
