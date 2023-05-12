@@ -23,6 +23,7 @@ import ua.sinaver.web3.repository.SigningKeyRepository;
 
 @RestController
 @RequestMapping("/ingestor")
+@Transactional
 class DataIngestorController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataIngestorController.class);
@@ -37,7 +38,6 @@ class DataIngestorController {
     private SigningKeyRepository signingKeyRepository;
 
     @PostMapping("/records")
-    @Transactional
     public ResponseEntity<String> generateRecord() {
         List<Record> records = IntStream.range(0, NUM_RECORDS).parallel().mapToObj(i -> {
             Record record = new Record();
@@ -51,7 +51,6 @@ class DataIngestorController {
     }
 
     @PostMapping("/keys")
-    @Transactional
     public ResponseEntity<String> generateKey() {
 
         List<SigningKey> keys = IntStream.range(0, NUM_KEYS).parallel().mapToObj(num -> {
@@ -68,14 +67,12 @@ class DataIngestorController {
     }
 
     @GetMapping("/records")
-    @Transactional
     public ResponseEntity<String> records() {
         return ResponseEntity.ok(String.format("Records: %s",
                 recordRepository.findBySignedFalse(PageRequest.of(0, 150)).stream().map(r -> r.getId()).toList()));
     }
 
     @GetMapping("/keys")
-    @Transactional
     public ResponseEntity<String> keys() {
         SigningKey leastUsedKey = signingKeyRepository.findFirstByOrderByLastUsedAsc();
         leastUsedKey.setLastUsed(new Date());
@@ -83,6 +80,3 @@ class DataIngestorController {
                 leastUsedKey.getId()));
     }
 }
-
-// MessageDigest digest256 = new Keccak.Digest256();
-// return digest256.digest(data);

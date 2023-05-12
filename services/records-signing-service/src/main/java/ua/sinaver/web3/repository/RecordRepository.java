@@ -20,4 +20,11 @@ public interface RecordRepository extends CrudRepository<Record, Integer> {
     @QueryHints(@QueryHint(name = AvailableSettings.JAKARTA_LOCK_TIMEOUT, value = "-2"))
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Record> findBySignedFalse(Pageable pageable);
+
+    // JPA: UPGRADE_SKIPLOCKED - PESSIMISTIC_WRITE with a
+    // javax.persistence.lock.timeout setting of -2
+    // https://docs.jboss.org/hibernate/orm/5.0/userguide/html_single/chapters/locking/Locking.html
+    @QueryHints(@QueryHint(name = AvailableSettings.JAKARTA_LOCK_TIMEOUT, value = "-2"))
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Record> findBySignedFalseAndIdBetween(int start, int end);
 }

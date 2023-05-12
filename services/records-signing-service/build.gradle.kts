@@ -24,6 +24,8 @@ dependencies {
 	// utils
 	implementation("org.apache.commons:commons-lang3:3.12.0")
 	implementation("org.bouncycastle:bcprov-jdk18on:1.73")
+	implementation("com.google.guava:guava:31.1-jre")
+   	implementation("com.google.code.gson:gson:2.10.1")
 
 	developmentOnly ("org.springframework.boot:spring-boot-devtools")
 	
