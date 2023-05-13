@@ -25,7 +25,6 @@ import ua.sinaver.web3.repository.SigningKeyRepository;
 @RequestMapping("/ingestor")
 @Transactional
 class DataIngestorController {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(DataIngestorController.class);
 
     private static final int NUM_RECORDS = 100;
