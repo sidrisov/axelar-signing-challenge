@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
@@ -29,12 +30,14 @@ import ua.sinaver.web3.data.Record;;
 @Configuration
 public class SigningTaskListener {
     public static final String SIGNING_TASK_QUEUE = "signing-task";
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(SigningTaskListener.class);
-
-    private static final int BATCH_SIZE = 10000;
-
+    
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting().create();
+
+    @Value("${service.signing.batch.size}")
+    private int batchSize;
 
     @Autowired
     private RecordRepository recordRepository;
@@ -53,7 +56,7 @@ public class SigningTaskListener {
         LOGGER.info("Received signing task: {}", content);
 
         SigningKey signingKey = signingKeyRepository.findFirstByOrderByLastUsedAsc();
-        List<Record> recordsInBatch = recordRepository.findBySignedFalse(PageRequest.of(0, BATCH_SIZE));
+        List<Record> recordsInBatch = recordRepository.findBySignedFalse(PageRequest.of(0, batchSize));
 
         MessageDigest digest256 = new Keccak.Digest256();
 

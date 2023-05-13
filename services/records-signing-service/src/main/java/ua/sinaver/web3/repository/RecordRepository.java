@@ -27,4 +27,6 @@ public interface RecordRepository extends CrudRepository<Record, Integer> {
     @QueryHints(@QueryHint(name = AvailableSettings.JAKARTA_LOCK_TIMEOUT, value = "-2"))
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Record> findBySignedFalseAndIdBetween(int start, int end);
+
+    long countBySignedFalse();
 }

@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "service.signing.batch.size",
+      "type": "java.lang.String",
+      "description": "Size of records signing batch"
+    },
+    {
+      "name": "service.ingestor.keys.size",
+      "type": "java.lang.String",
+      "description": "Number of keys to be generated with ingestor"
+    },
+    {
+      "name": "service.ingestor.records.size",
+      "type": "java.lang.String",
+      "description": "Number of records to be generated with ingestor"
+    }
+  ]
+}

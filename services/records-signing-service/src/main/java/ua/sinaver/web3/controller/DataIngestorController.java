@@ -8,6 +8,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +28,11 @@ import ua.sinaver.web3.repository.SigningKeyRepository;
 class DataIngestorController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataIngestorController.class);
 
-    private static final int NUM_RECORDS = 100;
-    private static final int NUM_KEYS = 100;
+    @Value("${service.ingestor.records.size}")
+    private int numOfRecords;
+
+    @Value("${service.ingestor.keys.size}")
+    private int numOfKeys;
 
     @Autowired
     private RecordRepository recordRepository;
@@ -38,7 +42,7 @@ class DataIngestorController {
 
     @PostMapping("/records")
     public ResponseEntity<String> generateRecord() {
-        List<Record> records = IntStream.range(0, NUM_RECORDS).parallel().mapToObj(i -> {
+        List<Record> records = IntStream.range(0, numOfRecords).parallel().mapToObj(i -> {
             Record record = new Record();
             record.setData(RandomUtils.nextBytes(32));
             return record;
@@ -46,13 +50,13 @@ class DataIngestorController {
 
         recordRepository.saveAll(records);
 
-        return ResponseEntity.ok(String.format("%s Records generated!", NUM_RECORDS));
+        return ResponseEntity.ok(String.format("%s Records generated!", numOfRecords));
     }
 
     @PostMapping("/keys")
     public ResponseEntity<String> generateKey() {
 
-        List<SigningKey> keys = IntStream.range(0, NUM_KEYS).parallel().mapToObj(num -> {
+        List<SigningKey> keys = IntStream.range(0, numOfKeys).parallel().mapToObj(num -> {
             SigningKey signingKey = new SigningKey();
             // TODO: for now just seed with random bytes, as signature we will store
             // sha3(data + key)
@@ -62,7 +66,7 @@ class DataIngestorController {
 
         signingKeyRepository.saveAll(keys);
 
-        return ResponseEntity.ok(String.format("%s Signing Keys generated!", NUM_KEYS));
+        return ResponseEntity.ok(String.format("%s Signing Keys generated!", numOfKeys));
     }
 
     @GetMapping("/records")
