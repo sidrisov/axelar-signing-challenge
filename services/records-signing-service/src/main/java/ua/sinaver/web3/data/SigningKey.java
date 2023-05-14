@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Version;
 
 @Entity
 public class SigningKey {
@@ -23,6 +24,9 @@ public class SigningKey {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date lastUsed = new Date();
+
+	@Version
+	private Long version;
 
 	public Integer getId() {
 		return id;
@@ -46,5 +50,13 @@ public class SigningKey {
 
 	public void setLastUsed(Date lastUsed) {
 		this.lastUsed = lastUsed;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 }

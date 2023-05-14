@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.Version;
 
 @Entity
 public class Record {
@@ -23,6 +24,9 @@ public class Record {
 
     @Column(columnDefinition = "boolean")
     private boolean signed;
+
+    @Version
+    private Long version;
 
     public Integer getId() {
         return id;
@@ -54,5 +58,13 @@ public class Record {
 
     public void setSigned(boolean isSigned) {
         this.signed = isSigned;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

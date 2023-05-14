@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.transaction.Transactional;
+import ua.sinaver.web3.mq.SigningTaskEvent;
 import ua.sinaver.web3.mq.SigningTaskListener;
 import ua.sinaver.web3.repository.RecordRepository;
 
@@ -33,7 +34,8 @@ public class RecordSigningController {
         final int numOfTasks = (int) Math.ceil(unsignedRecords / batchSize);
 
         IntStream.rangeClosed(1, numOfTasks).forEach(taskId -> {
-            rabbitTemplate.convertAndSend(SigningTaskListener.SIGNING_TASK_QUEUE, "Signing Task #" + taskId);
+            rabbitTemplate.convertAndSend(SigningTaskListener.SIGNING_TASK_QUEUE,
+                    new SigningTaskEvent(String.valueOf(taskId), batchSize));
         });
 
         return ResponseEntity

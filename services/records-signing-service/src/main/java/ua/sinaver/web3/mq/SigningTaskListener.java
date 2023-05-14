@@ -1,73 +1,56 @@
 package ua.sinaver.web3.mq;
 
-import java.security.MessageDigest;
-import java.util.Date;
-import java.util.List;
-
-import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import com.google.common.primitives.Bytes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 
 import jakarta.transaction.Transactional;
-import ua.sinaver.web3.data.SigningKey;
 import ua.sinaver.web3.repository.RecordRepository;
-import ua.sinaver.web3.repository.SigningKeyRepository;
-import ua.sinaver.web3.data.Record;;
+import ua.sinaver.web3.service.ISigningService;;
 
 @Component
 @Configuration
 public class SigningTaskListener {
     public static final String SIGNING_TASK_QUEUE = "signing-task";
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(SigningTaskListener.class);
-    
-    private static final Gson GSON = new GsonBuilder()
-            .setPrettyPrinting().create();
 
-    @Value("${service.signing.batch.size}")
-    private int batchSize;
+    public static final Logger LOGGER = LoggerFactory.getLogger(SigningTaskListener.class);
 
     @Autowired
-    private RecordRepository recordRepository;
+    private ISigningService signingService;
 
     @Autowired
-    private SigningKeyRepository signingKeyRepository;
+    public RecordRepository recordRepository;
 
     @Bean
     Queue queue() {
         return new Queue(SIGNING_TASK_QUEUE, false);
     }
 
+    @Bean
+    RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
+        final var rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(producerJackson2MessageConverter());
+        return rabbitTemplate;
+    }
+
+    @Bean
+    Jackson2JsonMessageConverter producerJackson2MessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
     @Transactional
     @RabbitListener(queues = "signing-task")
-    public void processMessage(String content) throws Throwable {
-        LOGGER.info("Received signing task: {}", content);
-
-        SigningKey signingKey = signingKeyRepository.findFirstByOrderByLastUsedAsc();
-        List<Record> recordsInBatch = recordRepository.findBySignedFalse(PageRequest.of(0, batchSize));
-
-        MessageDigest digest256 = new Keccak.Digest256();
-
-        recordsInBatch.stream().forEach(r -> {
-            r.setSignature(digest256.digest(Bytes.concat(r.getData(), signingKey.getKeyData())));
-            r.setSigned(true);
-        });
-
-        signingKey.setLastUsed(new Date());
-
-        LOGGER.info("Batch signed by key {} - records: {}", signingKey.getId(),
-                GSON.toJson(recordsInBatch.stream().map(r -> r.getId()).toList()));
+    public void processMessage(SigningTaskEvent event) throws Throwable {
+        LOGGER.info("Received signing task: {}", event);
+        signingService.signRecordsWithLeastUsedKey(event);
     }
 }

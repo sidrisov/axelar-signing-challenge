@@ -1,4 +1,8 @@
 #!/bin/sh
+
+docker stop axelar-signing-service-1 && docker rm -f axelar-signing-service-1
+docker stop axelar-signing-service-2 && docker rm -f axelar-signing-service-2
+
 docker run -d \
      --network axelar-network --network-alias signing-service-1 \
      --name axelar-signing-service-1 \
