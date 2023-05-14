@@ -17,6 +17,7 @@ import com.google.common.primitives.Bytes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import ua.sinaver.web3.data.SigningKey;
 import ua.sinaver.web3.mq.SigningTaskEvent;
@@ -39,6 +40,9 @@ public class SigningService implements ISigningService {
 
     @Autowired
     private SigningKeyRepository signingKeyRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     // @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000), retryFor =
     // EmptyResultDataAccessException.class)
@@ -75,6 +79,7 @@ public class SigningService implements ISigningService {
         recordRepository.saveAll(records);
     }
 
+    @Override
     public void signRecordsWithLeastUsedKey(SigningTaskEvent signingTask) {
         SigningKey signingKey = fetchSinginKeyWithRetry();
         List<Record> recordsInBatch = recordRepository
@@ -89,8 +94,15 @@ public class SigningService implements ISigningService {
 
         signingKey.setLastUsed(new Date());
 
-        LOGGER.info("Batch {} signed by key {} - records: {}",
-                signingTask.taskId(), signingKey.getId(),
-                GSON.toJson(recordsInBatch.stream().map(r -> r.getId()).toList()));
+        signingKeyRepository.save(signingKey);
+        recordRepository.saveAll(recordsInBatch);
+
+        entityManager.flush();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Batch {} signed by key {} - records: {}",
+                    signingTask.taskId(), signingKey.getId(),
+                    GSON.toJson(recordsInBatch.stream().map(r -> r.getId()).toList()));
+        }
     }
 }

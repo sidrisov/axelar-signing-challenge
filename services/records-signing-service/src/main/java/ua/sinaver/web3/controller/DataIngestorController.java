@@ -1,5 +1,7 @@
 package ua.sinaver.web3.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +21,8 @@ import ua.sinaver.web3.service.ISigningService;
 @RequestMapping("/ingestor")
 @Transactional
 class DataIngestorController {
+    public static final Logger LOGGER = LoggerFactory.getLogger(DataIngestorController.class);
+
     @Value("${service.ingestor.records.size}")
     private int numOfRecords;
 
@@ -42,7 +46,7 @@ class DataIngestorController {
 
     @PostMapping("/keys")
     public ResponseEntity<String> generateKeys() {
-        signingService.generateAndSaveKeys(numOfRecords);
+        signingService.generateAndSaveKeys(numOfKeys);
         return ResponseEntity.ok(String.format("%s Signing Keys generated!", numOfKeys));
     }
 

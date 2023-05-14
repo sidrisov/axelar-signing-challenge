@@ -15,5 +15,7 @@ public interface SigningKeyRepository extends CrudRepository<SigningKey, Integer
     // https://docs.jboss.org/hibernate/orm/5.0/userguide/html_single/chapters/locking/Locking.html
     @QueryHints(@QueryHint(name = AvailableSettings.JAKARTA_LOCK_TIMEOUT, value = "-2"))
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    // @Query(value = "select * from signing_key s order by s.last_used Asc Limit 1
+    // for update skip locked", nativeQuery = true)
     SigningKey findFirstByOrderByLastUsedAsc();
 }

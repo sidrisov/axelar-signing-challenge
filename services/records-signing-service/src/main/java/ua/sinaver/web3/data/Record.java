@@ -5,10 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 @Entity
+// add index for signed as we fetch data based on whether it was signed or not
+@Table(indexes = @Index(columnList = "signed"))
 public class Record {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
