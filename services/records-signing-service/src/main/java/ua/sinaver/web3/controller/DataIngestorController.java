@@ -5,11 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.transaction.Transactional;
 import ua.sinaver.web3.data.SigningKey;
@@ -40,14 +43,26 @@ class DataIngestorController {
 
     @PostMapping("/records")
     public ResponseEntity<String> generateRecords() {
-        signingService.generateAndSaveRecords(numOfRecords);
+        try {
+            signingService.generateAndSaveRecords(numOfRecords);
+        } catch (Throwable t) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate records!", t);
+        }
         return ResponseEntity.ok(String.format("%s Records generated!", numOfRecords));
     }
 
+    @ExceptionHandler(Error.class)
     @PostMapping("/keys")
     public ResponseEntity<String> generateKeys() {
-        signingService.generateAndSaveKeys(numOfKeys);
+        try {
+            signingService.generateAndSaveKeys(numOfKeys);
+        } catch (Throwable t) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate keys!", t);
+        }
         return ResponseEntity.ok(String.format("%s Signing Keys generated!", numOfKeys));
+
     }
 
     @GetMapping("/records")

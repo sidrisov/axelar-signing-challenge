@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +42,15 @@ public class RecordSigningController {
         return ResponseEntity
                 .ok(String.format("Initiated %s tasks to sign %s records in batches (%s)!", numOfTasks, unsignedRecords,
                         batchSize));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<String> stats() {
+        final long total = recordRepository.count();
+        final long signed = recordRepository.countBySignedTrue();
+
+        return ResponseEntity
+                .ok(String.format("%s/%s (%s%%)", signed, total, 100 * signed / total));
     }
 
 }

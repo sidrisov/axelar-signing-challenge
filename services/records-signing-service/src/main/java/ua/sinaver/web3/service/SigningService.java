@@ -1,6 +1,11 @@
 package ua.sinaver.web3.service;
 
-import java.security.MessageDigest;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -13,19 +18,15 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.google.common.primitives.Bytes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import ua.sinaver.web3.data.SigningKey;
 import ua.sinaver.web3.mq.SigningTaskEvent;
 import ua.sinaver.web3.data.Record;
 import ua.sinaver.web3.repository.RecordRepository;
 import ua.sinaver.web3.repository.SigningKeyRepository;
-
-import org.bouncycastle.jcajce.provider.digest.Keccak;
 
 @Service
 @Transactional
@@ -42,7 +43,7 @@ public class SigningService implements ISigningService {
     private SigningKeyRepository signingKeyRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private ICryptoService cryptoService;
 
     // @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000), retryFor =
     // EmptyResultDataAccessException.class)
@@ -59,12 +60,14 @@ public class SigningService implements ISigningService {
     public void generateAndSaveKeys(int numOfKeys) {
         List<SigningKey> keys = IntStream.range(0, numOfKeys).parallel().mapToObj(num -> {
             SigningKey signingKey = new SigningKey();
-            // TODO: for now just seed with random bytes, as signature we will store
-            // sha3(data + key)
-            signingKey.setKeyData(RandomUtils.nextBytes(32));
+            try {
+                signingKey.setKeyData(cryptoService.generateECPrivateKey());
+            } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException e) {
+                LOGGER.error("Error", e);
+                throw new RuntimeException(e);
+            }
             return signingKey;
         }).toList();
-
         signingKeyRepository.saveAll(keys);
     }
 
@@ -75,7 +78,6 @@ public class SigningService implements ISigningService {
             record.setData(RandomUtils.nextBytes(32));
             return record;
         }).toList();
-
         recordRepository.saveAll(records);
     }
 
@@ -85,19 +87,19 @@ public class SigningService implements ISigningService {
         List<Record> recordsInBatch = recordRepository
                 .findBySignedFalse(PageRequest.of(0, signingTask.batchSize()));
 
-        MessageDigest digest256 = new Keccak.Digest256();
-
         recordsInBatch.stream().forEach(r -> {
-            r.setSignature(digest256.digest(Bytes.concat(r.getData(), signingKey.getKeyData())));
-            r.setSigned(true);
+            try {
+                byte[] signature = cryptoService.signDataWithECPrivateKey(r.getData(), signingKey.getKeyData());
+                r.setSignature(signature);
+                r.setSigned(true);
+            } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException
+                    | SignatureException e) {
+                LOGGER.error("Error", e);
+                throw new RuntimeException(e);
+            }
         });
 
         signingKey.setLastUsed(new Date());
-
-        signingKeyRepository.save(signingKey);
-        recordRepository.saveAll(recordsInBatch);
-
-        entityManager.flush();
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Batch {} signed by key {} - records: {}",

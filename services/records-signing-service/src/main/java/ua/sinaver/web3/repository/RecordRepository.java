@@ -29,4 +29,5 @@ public interface RecordRepository extends CrudRepository<Record, Integer> {
     List<Record> findBySignedFalseAndIdBetween(int start, int end);
 
     long countBySignedFalse();
+    long countBySignedTrue();
 }

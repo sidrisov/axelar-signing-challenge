@@ -23,7 +23,7 @@ public class Record {
     private byte[] data;
 
     @Lob
-    @Column(columnDefinition = "varbinary(32)")
+    @Column(columnDefinition = "varbinary(144)")
     private byte[] signature;
 
     @Column(columnDefinition = "boolean")

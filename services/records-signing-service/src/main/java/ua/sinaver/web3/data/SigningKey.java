@@ -24,8 +24,14 @@ public class SigningKey {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 
+	// secp256k1 is not of constant length, typically it's between 32 and 33 bytes,
+	// but in standard java API it will be 144 bytes, as it encodes it in PKCS#8
+	// format
+	// which all the required information, like type of curve, etc.
+	// if we need to create too many keys, better switch to 32/33 format, and
+	// specify curve spec used
 	@Lob
-	@Column(columnDefinition = "varbinary(32)")
+	@Column(columnDefinition = "varbinary(144)")
 	private byte[] keyData;
 
 	// specify the name, spring entity manager has issue
