@@ -21,7 +21,6 @@ public class RecordsSigningApplication {
 	static {
 		Security.addProvider(new BouncyCastleProvider());
 	}
-
 	public static void main(String[] args) {
 		SpringApplication.run(RecordsSigningApplication.class, args);
 	}
